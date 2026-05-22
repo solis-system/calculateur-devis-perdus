@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur de devis perdus | Solis System</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #faf8f5;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --accent: #c8551f;
+    --accent-dark: #a8451a;
+    --accent-soft: #fef0e8;
+    --line: #e8e3dc;
+    --green: #2d7a4f;
+    --warning: #d97706;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 38px);
+    line-height: 1.15;
+    font-weight: 700;
+    margin-bottom: 14px;
+    letter-spacing: -0.5px;
+  }
+  .subtitle {
+    font-size: 17px;
+    color: var(--ink-soft);
+    max-width: 540px;
+    margin: 0 auto;
+  }
+  .card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    padding: 36px 32px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--line);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 100px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+  .progress-text {
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .step { display: none; }
+  .step.active {
+    display: block;
+    animation: fadeIn 0.35s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .question {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .question-hint {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+  }
+  .input-group {
+    position: relative;
+    margin-bottom: 24px;
+  }
+  input[type="number"], input[type="email"], input[type="text"] {
+    width: 100%;
+    padding: 18px 20px;
+    font-size: 18px;
+    font-weight: 600;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--ink);
+    transition: border-color 0.2s, background 0.2s;
+    font-family: inherit;
+  }
+  input[type="number"]:focus, input[type="email"]:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: white;
+  }
+  .input-suffix {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-soft);
+    font-weight: 600;
+    font-size: 16px;
+    pointer-events: none;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .option {
+    padding: 16px 20px;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: left;
+    transition: all 0.15s;
+    color: var(--ink);
+    font-family: inherit;
+  }
+  .option:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .option.selected {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+  }
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .btn {
+    padding: 16px 28px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    flex: 1;
+  }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-primary:disabled {
+    background: #d0c8be;
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 2px solid var(--line);
+  }
+  .btn-secondary:hover { background: var(--bg); }
+
+  /* Results screen */
+  .result-headline {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .result-label {
+    font-size: 14px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .result-amount {
+    font-size: clamp(48px, 10vw, 72px);
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .result-period {
+    font-size: 16px;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  .result-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 28px 0;
+  }
+  .stat-box {
+    background: var(--bg);
+    padding: 20px 18px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-value.warning { color: var(--warning); }
+  .stat-value.green { color: var(--green); }
+  .diagnostic {
+    background: var(--accent-soft);
+    border-left: 4px solid var(--accent);
+    padding: 18px 20px;
+    border-radius: 8px;
+    margin-bottom: 28px;
+  }
+  .diagnostic-title {
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--accent-dark);
+  }
+  .diagnostic-text {
+    font-size: 15px;
+    color: var(--ink);
+  }
+
+  /* Email gate */
+  .gate {
+    text-align: center;
+    padding: 8px 0;
+  }
+  .gate h2 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.25;
+    letter-spacing: -0.3px;
+  }
+  .gate p {
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+    font-size: 16px;
+  }
+  .gate-benefits {
+    text-align: left;
+    margin: 24px 0;
+    padding: 20px;
+    background: var(--bg);
+    border-radius: 12px;
+  }
+  .gate-benefit {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 15px;
+  }
+  .gate-benefit:last-child { margin-bottom: 0; }
+  .check {
+    color: var(--green);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Thank you */
+  .success {
+    text-align: center;
+    padding: 20px 0;
+  }
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    background: var(--green);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    color: white;
+    font-size: 36px;
+  }
+  .success h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .success p {
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+    font-size: 16px;
+  }
+  .cta-rdv {
+    background: var(--ink);
+    color: white;
+    padding: 24px;
+    border-radius: 12px;
+    margin-top: 20px;
+    text-align: left;
+  }
+  .cta-rdv h3 {
+    font-size: 18px;
+    margin-bottom: 6px;
+    color: white;
+  }
+  .cta-rdv p {
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  .btn-rdv {
+    background: var(--accent);
+    color: white;
+    width: 100%;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+  .btn-rdv:hover { background: var(--accent-dark); }
+
+  .footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  @media (max-width: 540px) {
+    .card { padding: 24px 20px; }
+    .question { font-size: 19px; }
+    .result-stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="badge">Diagnostic gratuit · 2 minutes</div>
+    <h1>Combien vous coûtent vraiment vos devis perdus ?</h1>
+    <p class="subtitle">Découvrez en 5 questions le manque à gagner caché de votre menuiserie — et les leviers concrets pour le récupérer.</p>
+  </div>
+
+  <div class="card">
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+      <div class="progress-text" id="progressText">1 / 5</div>
+    </div>
+
+    <!-- STEP 1: CA -->
+    <div class="step active" data-step="1">
+      <div class="question">Quel est votre chiffre d'affaires annuel ?</div>
+      <div class="question-hint">Approximatif, sur les 12 derniers mois.</div>
+      <div class="input-group">
+        <input type="number" id="ca" placeholder="350 000" min="0" step="1000">
+        <span class="input-suffix">€</span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="next()">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Nombre de devis -->
+    <div class="step" data-step="2">
+      <div class="question">Combien de devis envoyez-vous par mois en moyenne ?</div>
+      <div class="question-hint">Sur l'ensemble de votre activité, tous types confondus.</div>
+      <div class="input-group">
+        <input type="number" id="nbDevis" placeholder="20" min="0" step="1">
+        <span class="input-suffix">devis / mois</span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="prev()">← Retour</button>
+        <button class="btn btn-primary" onclick="next()">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Taux de transformation (anciennement STEP 4) -->
+    <div class="step" data-step="3">
+      <div class="question">Sur 10 devis envoyés, combien finissent signés ?</div>
+      <div class="question-hint">Si vous ne savez pas exactement, donnez votre meilleure estimation.</div>
+      <div class="options" id="tauxOptions">
+        <button class="option" data-value="1">1 ou moins sur 10 (≤ 10%)</button>
+        <button class="option" data-value="2">2 sur 10 (≈ 20%)</button>
+        <button class="option" data-value="3">3 sur 10 (≈ 30%)</button>
+        <button class="option" data-value="4">4 sur 10 (≈ 40%)</button>
+        <button class="option" data-value="5">5 ou 6 sur 10 (50-60%)</button>
+        <button class="option" data-value="7">Plus de 6 sur 10 (> 60%)</button>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="prev()">← Retour</button>
+        <button class="btn btn-primary" onclick="next()" id="step3Next" disabled>Continuer →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Suivi des devis (anciennement STEP 5) -->
+    <div class="step" data-step="4">
+      <div class="question">Comment relancez-vous vos devis non signés ?</div>
+      <div class="question-hint">Soyez honnête, c'est anonyme.</div>
+      <div class="options" id="suiviOptions">
+        <button class="option" data-value="jamais">Je ne relance pas (ou très rarement)</button>
+        <button class="option" data-value="parfois">Je relance quand j'y pense, sans système</button>
+        <button class="option" data-value="souvent">Je relance la plupart du temps, mais pas systématiquement</button>
+        <button class="option" data-value="systematique">J'ai un process de relance systématique</button>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="prev()">← Retour</button>
+        <button class="btn btn-primary" onclick="next()" id="step4Next" disabled>Continuer →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: Raison principale de perte (anciennement STEP 6) -->
+    <div class="step" data-step="5">
+      <div class="question">Quelle est la raison principale de vos devis perdus ?</div>
+      <div class="question-hint">Quand un client ne signe pas, c'est le plus souvent à cause de...</div>
+      <div class="options" id="raisonOptions">
+        <button class="option" data-value="prix">Le prix (jugé trop élevé)</button>
+        <button class="option" data-value="delai">Mon délai de réponse trop long</button>
+        <button class="option" data-value="silence">Aucune nouvelle, ils disparaissent</button>
+        <button class="option" data-value="concurrence">La concurrence remporte la signature</button>
+        <button class="option" data-value="autre">Autre / je ne sais pas vraiment</button>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="prev()">← Retour</button>
+        <button class="btn btn-primary" onclick="showResults()" id="step5Next" disabled>Voir mon diagnostic →</button>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="step" data-step="6">
+      <div class="result-headline">
+        <div class="result-label">Votre potentiel de CA récupérable</div>
+        <div class="result-amount" id="resultAmount">0 €</div>
+        <div class="result-period">par an, en passant simplement votre taux de transformation à un objectif réaliste</div>
+      </div>
+
+      <div class="result-stats">
+        <div class="stat-box">
+          <div class="stat-label">Devis perdus / an</div>
+          <div class="stat-value warning" id="devisPerdus">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Taux actuel</div>
+          <div class="stat-value" id="tauxActuel">0%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Objectif réaliste (+5 pts)</div>
+          <div class="stat-value green" id="recuperable">0 €</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Soit en + par mois</div>
+          <div class="stat-value green" id="parMois">0 €</div>
+        </div>
+      </div>
+
+      <div class="diagnostic">
+        <div class="diagnostic-title">📊 Votre diagnostic</div>
+        <div class="diagnostic-text" id="diagnostic"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="showGate()">Recevoir mon plan d'action personnalisé →</button>
+      </div>
+    </div>
+
+    <!-- EMAIL GATE -->
+    <div class="step" data-step="7">
+      <div class="gate">
+        <h2>Recevez votre plan d'action en 5 leviers</h2>
+        <p>Un plan personnalisé basé sur vos réponses, envoyé directement par email.</p>
+
+        <div class="gate-benefits">
+          <div class="gate-benefit">
+            <span class="check">✓</span>
+            <span>Les <strong>3 leviers prioritaires</strong> à activer dans votre cas</span>
+          </div>
+          <div class="gate-benefit">
+            <span class="check">✓</span>
+            <span>Un <strong>modèle de relance</strong> qui convertit (testé sur 200+ menuiseries)</span>
+          </div>
+          <div class="gate-benefit">
+            <span class="check">✓</span>
+            <span>Le <strong>calcul détaillé</strong> de votre potentiel récupérable</span>
+          </div>
+          <div class="gate-benefit">
+            <span class="check">✓</span>
+            <span>Aucun spam — vous pouvez vous désabonner en un clic</span>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <input type="text" id="prenom" placeholder="Votre prénom">
+        </div>
+        <div class="input-group">
+          <input type="email" id="email" placeholder="votre@email.com">
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" onclick="submitEmail()" id="submitBtn">Envoyer mon plan d'action</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="step" data-step="8">
+      <div class="success">
+        <div class="success-icon">✓</div>
+        <h2>Votre plan d'action arrive !</h2>
+        <p>Vérifiez votre boîte mail (et vos spams) dans les prochaines minutes.</p>
+
+        <div class="cta-rdv">
+          <h3>🎯 Envie d'aller plus vite ?</h3>
+          <p>Réservez 20 minutes avec Bruno pour analyser ensemble votre cas et identifier le levier #1 à activer cette semaine. Gratuit, sans engagement.</p>
+          <a href="https://calendly.com/solis-system" class="btn-rdv" id="rdvLink">Réserver mon créneau →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXCELLENT PROFILE - Pas de vente de rêve -->
+    <div class="step" data-step="9">
+      <div class="success">
+        <div class="success-icon" style="background: #2d7a4f;">👏</div>
+        <h2>Bravo, vous êtes très bons.</h2>
+        <p style="font-size: 17px; max-width: 480px; margin: 0 auto 24px;">Avec un taux de transformation au-delà de 60%, vous faites partie du top 5% des menuiseries. La plupart des leviers classiques que nous activons chez nos clients, vous les maîtrisez déjà.</p>
+
+        <div class="diagnostic" style="text-align: left;">
+          <div class="diagnostic-title">Notre honnêteté avant tout</div>
+          <div class="diagnostic-text">Nous ne sommes pas là pour vous vendre du rêve. Vous promettre +20 points de transformation quand vous êtes déjà excellent serait malhonnête. <strong>Le vrai potentiel pour vous se situe ailleurs.</strong></div>
+        </div>
+
+        <div class="cta-rdv" style="text-align: left;">
+          <h3>💡 Une piste qui pourrait vous intéresser</h3>
+          <p>Sur les 40% de devis que vous ne signez pas, certains sont vraiment perdus, d'autres sont seulement "endormis". Si vous le souhaitez, on peut étudier ensemble comment optimiser ces retours-là — réactivation, segmentation, repositionnement tarifaire sur les profils à forte valeur.</p>
+          <p style="margin-bottom: 16px;">20 minutes, sans engagement, et on vous dit franchement s'il y a un levier à activer ou pas dans votre cas.</p>
+          <a href="https://calendly.com/solis-system" class="btn-rdv" id="rdvLinkExcellent">Échanger 20 min avec Bruno →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Solis System · Vos données restent confidentielles
+  </div>
+</div>
+
+<script>
+  const state = {
+    step: 1,
+    totalSteps: 5,
+    ca: 0,
+    nbDevis: 0,
+    taux: 0,
+    tauxActuel: 0,
+    panierMoyen: 0,
+    suivi: '',
+    raison: '',
+    manqueGagner: 0,
+    prenom: '',
+    email: ''
+  };
+
+  function updateProgress() {
+    const pct = (state.step / state.totalSteps) * 100;
+    document.getElementById('progress').style.width = Math.min(pct, 100) + '%';
+    document.getElementById('progressText').textContent = state.step + ' / ' + state.totalSteps;
+  }
+
+  function goToStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.querySelector('[data-step="' + n + '"]').classList.add('active');
+    state.step = n;
+    if (n <= 5) updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function next() {
+    // Validate current step
+    if (state.step === 1) {
+      const ca = parseFloat(document.getElementById('ca').value);
+      if (!ca || ca <= 0) { alert('Merci d\'indiquer votre chiffre d\'affaires.'); return; }
+      state.ca = ca;
+    } else if (state.step === 2) {
+      const nb = parseFloat(document.getElementById('nbDevis').value);
+      if (!nb || nb <= 0) { alert('Merci d\'indiquer le nombre de devis.'); return; }
+      state.nbDevis = nb;
+    }
+    goToStep(state.step + 1);
+  }
+
+  function prev() {
+    if (state.step > 1) goToStep(state.step - 1);
+  }
+
+  // Option buttons
+  function setupOptionGroup(containerId, stateKey, nextBtnId) {
+    document.querySelectorAll('#' + containerId + ' .option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('#' + containerId + ' .option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        state[stateKey] = opt.dataset.value;
+        if (nextBtnId) document.getElementById(nextBtnId).disabled = false;
+      });
+    });
+  }
+  setupOptionGroup('tauxOptions', 'taux', 'step3Next');
+  setupOptionGroup('suiviOptions', 'suivi', 'step4Next');
+  setupOptionGroup('raisonOptions', 'raison', 'step5Next');
+
+  function formatEuros(n) {
+    return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' €';
+  }
+
+  function showResults() {
+    // Conversion du taux ("2" -> 20%, "7" -> 70%)
+    const tauxActuel = parseFloat(state.taux) * 10;
+    state.tauxActuel = tauxActuel;
+
+    // Si profil excellent (>60%), on bascule directement sur l'écran "bravo"
+    if (tauxActuel > 60) {
+      goToStep(9);
+      return;
+    }
+
+    const tauxDecimal = tauxActuel / 100;
+
+    // === LOGIQUE DE CALCUL COHÉRENTE ===
+    // On part du CA déclaré et du taux pour déduire le CA théorique total proposé en devis.
+    // Puis on calcule ce que représenterait un objectif réaliste de +5 points de taux.
+
+    // CA total proposé en devis (à 100% de transformation, théorique)
+    const caTotalPropose = state.ca / tauxDecimal;
+
+    // Objectif réaliste : passer de X% à X+5% (plafonné à 50% pour rester crédible)
+    let tauxObjectif = Math.min(tauxDecimal + 0.05, 0.50);
+    // Sécurité : delta minimal de 3 points si déjà très proche du plafond
+    if (tauxObjectif <= tauxDecimal) {
+      tauxObjectif = tauxDecimal + 0.03;
+    }
+
+    // CA à atteindre avec ce nouveau taux
+    const caObjectif = caTotalPropose * tauxObjectif;
+
+    // === LE MANQUE À GAGNER AFFICHÉ = CE QUI EST RÉCUPÉRABLE RÉALISTEMENT ===
+    // Pas le manque théorique à 100% (irréaliste et démotivant),
+    // mais ce que ça rapporterait de passer de X% à X+5%.
+    const manqueGagner = caObjectif - state.ca;
+    const recuperable = manqueGagner; // les deux sont identiques dans cette logique
+
+    // Panier moyen calculé (utile pour le mail et la cohérence)
+    const nbDevisAnnuels = state.nbDevis * 12;
+    const devisSignes = nbDevisAnnuels * tauxDecimal;
+    const devisPerdus = nbDevisAnnuels - devisSignes;
+    const panierMoyen = devisSignes > 0 ? state.ca / devisSignes : 0;
+
+    // Stockage pour transmission au Worker
+    state.manqueGagner = manqueGagner;
+    state.panierMoyen = panierMoyen;
+
+    // === AFFICHAGE ===
+    document.getElementById('resultAmount').textContent = formatEuros(manqueGagner);
+    document.getElementById('devisPerdus').textContent = Math.round(devisPerdus);
+    document.getElementById('tauxActuel').textContent = tauxActuel + '%';
+    document.getElementById('recuperable').textContent = '+' + formatEuros(recuperable);
+    document.getElementById('parMois').textContent = '+' + formatEuros(recuperable / 12);
+
+    // Diagnostic personnalisé
+    let diag = '';
+    if (tauxActuel <= 20) {
+      diag = '<strong>Votre taux de transformation est faible</strong> (' + tauxActuel + '%). La moyenne du secteur menuiserie se situe autour de 30-35%. ';
+    } else if (tauxActuel <= 30) {
+      diag = '<strong>Votre taux est dans la moyenne basse du secteur.</strong> Beaucoup de menuiseries similaires à la vôtre arrivent à 35-45% avec un meilleur suivi. ';
+    } else {
+      diag = '<strong>Votre taux est correct</strong> (' + tauxActuel + '%), mais il reste un potentiel d\'amélioration. ';
+    }
+
+    if (state.suivi === 'jamais' || state.suivi === 'parfois') {
+      diag += '<br><br>Le point le plus critique dans votre cas : <strong>l\'absence de système de relance</strong>. Les études montrent que 60% des devis signés le sont après au moins une relance. Si vous ne relancez pas, vous perdez mécaniquement ces signatures.';
+    } else if (state.raison === 'silence') {
+      diag += '<br><br>Vos clients "disparaissent" parce qu\'aucun process ne les ramène vers vous au bon moment. <strong>C\'est le levier #1 dans votre cas.</strong>';
+    } else if (state.raison === 'prix') {
+      diag += '<br><br>"Le prix" est souvent le symptôme, pas la cause. Dans 70% des cas, c\'est en réalité <strong>la valeur perçue</strong> qui n\'est pas alignée avec le tarif. Ça se travaille dans la présentation du devis.';
+    } else if (state.raison === 'delai') {
+      diag += '<br><br>Le délai de réponse est un tueur silencieux : <strong>chaque jour de retard divise par 2 vos chances de signature</strong>. Un process accéléré récupère facilement 10-15 points de taux de transfo.';
+    }
+
+    document.getElementById('diagnostic').innerHTML = diag;
+
+    goToStep(6);
+  }
+
+  function showGate() {
+    goToStep(7);
+  }
+
+  // === URL du Worker Cloudflare qui transmet les données à Brevo ===
+  const WORKER_URL = 'https://calculateur-brevo.quiet-disk-b100.workers.dev/';
+
+  function submitEmail() {
+    const prenom = document.getElementById('prenom').value.trim();
+    const email = document.getElementById('email').value.trim();
+
+    if (!prenom) { alert('Merci d\'indiquer votre prénom.'); return; }
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      alert('Merci d\'indiquer un email valide.');
+      return;
+    }
+
+    state.prenom = prenom;
+    state.email = email;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Envoi en cours...';
+
+    // Appel au Worker Cloudflare qui transmet à Brevo
+    fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: state.email,
+        prenom: state.prenom,
+        ca: state.ca,
+        nbDevis: state.nbDevis,
+        panier: Math.round(state.panierMoyen),
+        tauxActuel: state.tauxActuel,
+        suivi: state.suivi,
+        raison: state.raison,
+        manqueGagner: Math.round(state.manqueGagner)
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Succès : on affiche l'écran de confirmation
+        goToStep(8);
+      } else {
+        // Erreur côté serveur : on affiche un message clair
+        console.error('Erreur Worker:', data);
+        alert('Une erreur est survenue lors de l\'envoi. Merci de réessayer ou de nous contacter directement à contact@solis-system.com');
+        btn.disabled = false;
+        btn.textContent = 'Envoyer mon plan d\'action';
+      }
+    })
+    .catch(error => {
+      // Erreur réseau (ex: pas de connexion)
+      console.error('Erreur réseau:', error);
+      alert('Problème de connexion. Merci de vérifier votre connexion internet et de réessayer.');
+      btn.disabled = false;
+      btn.textContent = 'Envoyer mon plan d\'action';
+    });
+  }
+
+  // Init
+  updateProgress();
+</script>
+</body>
+</html>
